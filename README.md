@@ -5,6 +5,7 @@ A modern React application that performs static code analysis to identify securi
 ## Features
 
 - Local static code analysis (no API keys needed)
+- File upload support with automatic language detection
 - Security vulnerability detection:
   - Command injection vulnerabilities
   - Cross-site scripting (XSS)
@@ -37,8 +38,10 @@ npm start
 
 ## Usage
 
-1. Select your programming language from the dropdown
-2. Paste your code into the editor
+1. Choose how to input your code:
+   - Upload a file using the "Upload File" button (supports .js, .py, .java, .cs, .php)
+   - Paste your code directly into the editor
+2. The programming language will be automatically detected for uploaded files, or you can select it manually from the dropdown
 3. Click "Analyze Code" to scan for vulnerabilities
 4. Review the detailed analysis:
    - Overall risk level
@@ -77,7 +80,6 @@ The scanner checks for various security issues including:
 ## Future Enhancements
 
 - Support for more programming languages
-- File upload capability
 - Batch analysis of multiple files
 - Integration with popular code repositories
 - Custom vulnerability rules
