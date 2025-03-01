@@ -11,16 +11,20 @@ import {
   ListItemIcon,
   Alert,
   CircularProgress,
-  Stack
+  Stack,
+  Chip
 } from '@mui/material';
 import { 
   Error as ErrorIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
-  Upload as UploadIcon
+  Upload as UploadIcon,
+  Api as ApiIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { analyzeOpenAPI } from '../services/openApiAnalyzer';
 
 function OpenAPIScanner() {
   const [spec, setSpec] = useState('');
@@ -29,32 +33,16 @@ function OpenAPIScanner() {
   const [error, setError] = useState(null);
   const [fileName, setFileName] = useState('');
 
-  const analyzeOpenAPI = async () => {
+  const analyzeSpec = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // TODO: Implement OpenAPI security analysis
-      const mockResults = {
-        overallRisk: 'medium',
-        issues: [
-          {
-            severity: 'high',
-            type: 'Authentication',
-            description: 'API endpoints lack proper authentication mechanisms',
-            path: '/api/users',
-            recommendation: 'Implement OAuth2 or JWT authentication'
-          },
-          {
-            severity: 'medium',
-            type: 'Data Exposure',
-            description: 'Sensitive data fields in responses',
-            path: '/api/user/{id}',
-            recommendation: 'Use response filtering or data masking'
-          }
-        ]
-      };
-      setResults(mockResults);
+      const analysis = await analyzeOpenAPI(spec);
+      if (!analysis.valid) {
+        throw new Error(analysis.error);
+      }
+      setResults(analysis);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -135,7 +123,7 @@ function OpenAPIScanner() {
             rows={10}
             value={spec}
             onChange={(e) => setSpec(e.target.value)}
-            placeholder="Paste your OpenAPI specification here or upload a file..."
+            placeholder="Paste your OpenAPI specification here or upload a file (JSON or YAML format)..."
             variant="outlined"
           />
 
@@ -143,13 +131,20 @@ function OpenAPIScanner() {
             fullWidth
             variant="contained"
             color="primary"
-            onClick={analyzeOpenAPI}
+            onClick={analyzeSpec}
             disabled={loading || !spec.trim()}
+            startIcon={<ApiIcon />}
           >
-            {loading ? <CircularProgress size={24} /> : 'Analyze OpenAPI Spec'}
+            {loading ? <CircularProgress size={24} /> : 'Analyze OpenAPI Specification'}
           </Button>
         </Stack>
       </Paper>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       {results && (
         <Box sx={{ mt: 4 }}>
@@ -157,7 +152,7 @@ function OpenAPIScanner() {
             severity={results.overallRisk.toLowerCase()} 
             sx={{ mb: 3 }}
           >
-            Overall Risk Level: {results.overallRisk}
+            Overall Risk Level: {results.overallRisk.toUpperCase()}
           </Alert>
 
           <Typography variant="h6" gutterBottom>
@@ -175,14 +170,21 @@ function OpenAPIScanner() {
                   {getSeverityIcon(issue.severity)}
                 </ListItemIcon>
                 <ListItemText
-                  primary={issue.type}
+                  primary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {issue.type}
+                      <Chip 
+                        label={issue.path} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ ml: 1 }}
+                      />
+                    </Box>
+                  }
                   secondary={
                     <>
-                      <Typography component="span" variant="body2" color="text.primary">
+                      <Typography component="div" variant="body2" color="text.primary" sx={{ mt: 1 }}>
                         {issue.description}
-                      </Typography>
-                      <Typography component="span" variant="body2" color="text.secondary">
-                        {` (Path: ${issue.path})`}
                       </Typography>
                       <Typography component="div" variant="body2" color="success.main" sx={{ mt: 1 }}>
                         Recommendation: {issue.recommendation}
@@ -190,6 +192,20 @@ function OpenAPIScanner() {
                     </>
                   }
                 />
+              </ListItem>
+            ))}
+          </List>
+
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            General API Security Recommendations
+          </Typography>
+          <List>
+            {results.recommendations.map((recommendation, index) => (
+              <ListItem key={index}>
+                <ListItemIcon>
+                  <CheckCircleIcon color="success" />
+                </ListItemIcon>
+                <ListItemText primary={recommendation} />
               </ListItem>
             ))}
           </List>
