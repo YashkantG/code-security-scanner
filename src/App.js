@@ -6,35 +6,16 @@ import {
   Paper,
   Tabs,
   Tab,
-  AppBar,
-  TextField,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Alert,
-  CircularProgress,
-  Snackbar,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Stack
+  AppBar
 } from '@mui/material';
 import { 
   Security as SecurityIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon,
-  Info as InfoIcon,
-  CheckCircle as CheckCircleIcon,
-  Upload as UploadIcon,
   Api as ApiIcon,
   Psychology as PsychologyIcon
 } from '@mui/icons-material';
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { analyzeCode } from './services/securityAnalyzer';
+import CodeScanner from './components/CodeScanner';
+import OpenAPIScanner from './components/OpenAPIScanner';
+import GPTScanner from './components/GPTScanner';
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -56,253 +37,6 @@ function TabPanel(props) {
   );
 }
 
-function CodeScanner() {
-  const [code, setCode] = useState('');
-  const [results, setResults] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [language, setLanguage] = useState('javascript');
-  const [fileName, setFileName] = useState('');
-
-  const analyzeSecurity = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const analysis = await analyzeCode(code, language);
-      setResults(analysis);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Update filename and try to detect language
-    setFileName(file.name);
-    const extension = file.name.split('.').pop().toLowerCase();
-    const languageMap = {
-      'js': 'javascript',
-      'py': 'python',
-      'java': 'java',
-      'cs': 'csharp',
-      'php': 'php'
-    };
-    if (languageMap[extension]) {
-      setLanguage(languageMap[extension]);
-    }
-
-    // Read file content
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setCode(e.target.result);
-    };
-    reader.onerror = () => {
-      setError('Error reading file');
-    };
-    reader.readAsText(file);
-  };
-
-  const getSeverityIcon = (severity) => {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return <ErrorIcon color="error" />;
-      case 'medium':
-        return <WarningIcon color="warning" />;
-      case 'low':
-        return <InfoIcon color="info" />;
-      default:
-        return <InfoIcon color="info" />;
-    }
-  };
-
-  const getSeverityColor = (severity) => {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return 'error.main';
-      case 'medium':
-        return 'warning.main';
-      case 'low':
-        return 'info.main';
-      default:
-        return 'info.main';
-    }
-  };
-
-  return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Stack spacing={2}>
-        <FormControl fullWidth>
-          <InputLabel>Language</InputLabel>
-          <Select
-            value={language}
-            label="Language"
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <MenuItem value="javascript">JavaScript</MenuItem>
-            <MenuItem value="python">Python</MenuItem>
-            <MenuItem value="java">Java</MenuItem>
-            <MenuItem value="csharp">C#</MenuItem>
-            <MenuItem value="php">PHP</MenuItem>
-          </Select>
-        </FormControl>
-
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Button
-            variant="contained"
-            component="label"
-            startIcon={<UploadIcon />}
-            sx={{ minWidth: '200px' }}
-          >
-            Upload File
-            <input
-              type="file"
-              hidden
-              accept=".js,.py,.java,.cs,.php"
-              onChange={handleFileUpload}
-            />
-          </Button>
-          {fileName && (
-            <Typography variant="body2" color="text.secondary">
-              Selected file: {fileName}
-            </Typography>
-          )}
-        </Box>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={10}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Paste your code here or upload a file..."
-          variant="outlined"
-        />
-
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          onClick={analyzeSecurity}
-          disabled={loading || !code.trim()}
-          sx={{ mt: 2 }}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Analyze Code'}
-        </Button>
-      </Stack>
-
-      {results && (
-        <Box sx={{ mt: 4 }}>
-          <Alert 
-            severity={results.overallRisk.toLowerCase()} 
-            sx={{ mb: 3 }}
-          >
-            Overall Risk Level: {results.overallRisk}
-          </Alert>
-
-          <Typography variant="h6" gutterBottom>
-            Security Analysis Results
-          </Typography>
-          
-          <List>
-            {results.vulnerabilities.map((vuln, index) => (
-              <ListItem key={index} sx={{ 
-                bgcolor: `${getSeverityColor(vuln.severity)}15`,
-                borderRadius: 1,
-                mb: 1 
-              }}>
-                <ListItemIcon>
-                  {getSeverityIcon(vuln.severity)}
-                </ListItemIcon>
-                <ListItemText
-                  primary={vuln.type}
-                  secondary={
-                    <>
-                      <Typography component="span" variant="body2" color="text.primary">
-                        {vuln.description}
-                      </Typography>
-                      {vuln.line && (
-                        <Typography component="span" variant="body2" color="text.secondary">
-                          {` (Line ${vuln.line})`}
-                        </Typography>
-                      )}
-                      <Typography component="div" variant="body2" color="success.main" sx={{ mt: 1 }}>
-                        Recommendation: {vuln.recommendation}
-                      </Typography>
-                    </>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-
-          {results.secureCodeExample && (
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Secure Implementation Example
-              </Typography>
-              <SyntaxHighlighter 
-                language={language}
-                style={vs2015}
-                customStyle={{
-                  padding: '16px',
-                  borderRadius: '4px'
-                }}
-              >
-                {results.secureCodeExample}
-              </SyntaxHighlighter>
-            </Box>
-          )}
-
-          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-            General Security Recommendations
-          </Typography>
-          <List>
-            {results.suggestions.map((suggestion, index) => (
-              <ListItem key={index}>
-                <ListItemIcon>
-                  <CheckCircleIcon color="success" />
-                </ListItemIcon>
-                <ListItemText primary={suggestion} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      )}
-    </Paper>
-  );
-}
-
-function OpenAPIScanner() {
-  return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        OpenAPI Scanner
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        This is a placeholder for the OpenAPI Scanner component.
-      </Typography>
-    </Paper>
-  );
-}
-
-function GPTScanner() {
-  return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        GPT Scanner
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        This is a placeholder for the GPT Scanner component.
-      </Typography>
-    </Paper>
-  );
-}
-
 function App() {
   const [currentTab, setCurrentTab] = useState(0);
 
@@ -311,43 +45,25 @@ function App() {
   };
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          mb: 4 
-        }}>
-          <SecurityIcon sx={{ mr: 2 }} />
-          Code Security Scanner
+    <Box sx={{ width: '100%' }}>
+      <AppBar position="static" color="default">
+        <Typography variant="h4" component="h1" sx={{ p: 2, textAlign: 'center' }}>
+          Security Scanner
         </Typography>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+        >
+          <Tab icon={<SecurityIcon />} label="Code Scanner" />
+          <Tab icon={<ApiIcon />} label="OpenAPI Scanner" />
+          <Tab icon={<PsychologyIcon />} label="GPT Scanner" />
+        </Tabs>
+      </AppBar>
 
-        <AppBar position="static" color="default" sx={{ borderRadius: 1 }}>
-          <Tabs
-            value={currentTab}
-            onChange={handleTabChange}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="fullWidth"
-          >
-            <Tab 
-              icon={<SecurityIcon />} 
-              label="Code Scanner" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<ApiIcon />} 
-              label="OpenAPI Scanner" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<PsychologyIcon />} 
-              label="GPT Scanner" 
-              iconPosition="start"
-            />
-          </Tabs>
-        </AppBar>
-
+      <Container maxWidth="lg">
         <TabPanel value={currentTab} index={0}>
           <CodeScanner />
         </TabPanel>
@@ -357,15 +73,8 @@ function App() {
         <TabPanel value={currentTab} index={2}>
           <GPTScanner />
         </TabPanel>
-      </Box>
-
-      <Snackbar
-        open={false}
-        autoHideDuration={6000}
-        onClose={() => {}}
-        message=""
-      />
-    </Container>
+      </Container>
+    </Box>
   );
 }
 
