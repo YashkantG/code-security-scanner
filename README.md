@@ -1,90 +1,101 @@
 # Code Security Scanner
 
-A modern React application that performs static code analysis to identify security vulnerabilities and best practices violations in your code. Built with ESLint and security-focused rules.
+A comprehensive security scanning tool for code analysis, featuring multiple specialized scanners:
 
 ## Features
 
-- Local static code analysis (no API keys needed)
-- File upload support with automatic language detection
-- Security vulnerability detection:
-  - Command injection vulnerabilities
-  - Cross-site scripting (XSS)
-  - Buffer manipulation issues
-  - Information disclosure risks
-  - Unsafe regular expressions
-  - Timing attack vulnerabilities
-  - And more...
-- Modern, responsive Material-UI interface
-- Real-time code analysis with syntax highlighting
+### 1. Code Scanner
+- Static code analysis for security vulnerabilities
 - Support for multiple programming languages
-- Detailed vulnerability reporting with severity levels
-- Actionable security recommendations
-- Secure code examples
-- Beautiful syntax highlighting for code input and output
+- Real-time code analysis
+- Detailed security recommendations
+
+### 2. OpenAPI Scanner
+- Analyze OpenAPI/Swagger specifications
+- Check for API security best practices
+- Authentication and authorization validation
+- Data exposure risk assessment
+- Input validation verification
+
+### 3. GPT Scanner (AI-Powered Analysis)
+- AI-powered code security analysis
+- Intelligent vulnerability detection
+- Code quality assessment
+- Best practices recommendations
+- Performance optimization suggestions
+- Support for multiple programming languages
 
 ## Getting Started
 
-1. Install dependencies:
+### Prerequisites
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/code-security-scanner.git
+cd code-security-scanner
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Start the development server:
+3. Set up environment variables:
+Create a `.env` file in the root directory and add the following:
+```env
+REACT_APP_GPT_API_ENDPOINT=your_gpt_api_endpoint
+REACT_APP_GPT_API_KEY=your_gpt_api_key
+```
+
+4. Start the development server:
 ```bash
 npm start
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The application will be available at `http://localhost:3000`
 
 ## Usage
 
-1. Choose how to input your code:
-   - Upload a file using the "Upload File" button (supports .js, .py, .java, .cs, .php)
-   - Paste your code directly into the editor
-2. The programming language will be automatically detected for uploaded files, or you can select it manually from the dropdown
-3. Click "Analyze Code" to scan for vulnerabilities
-4. Review the detailed analysis:
-   - Overall risk level
-   - Specific vulnerabilities with severity levels
-   - Line numbers where issues were found
-   - Actionable recommendations for each vulnerability
-   - Secure code examples
-   - General security improvement suggestions
+### Code Scanner
+1. Select the programming language
+2. Upload a code file or paste code directly
+3. Click "Analyze Code" to get security analysis results
 
-## Security Rules
+### OpenAPI Scanner
+1. Upload an OpenAPI specification file (JSON/YAML)
+2. Or paste the specification directly
+3. Click "Analyze OpenAPI Specification" to check for security issues
 
-The scanner checks for various security issues including:
+### GPT Scanner
+1. Select the programming language
+2. Upload a code file or paste code directly
+3. Click "Analyze with AI" for intelligent code analysis
+4. Review AI-generated security recommendations
 
-- `no-eval`: Prevents dangerous code execution via eval()
-- `no-implied-eval`: Prevents string execution in setTimeout/setInterval
-- `detect-buffer-noassert`: Prevents buffer overflow vulnerabilities
-- `detect-child-process`: Identifies dangerous child process execution
-- `detect-disable-mustache-escape`: Prevents template injection
-- `detect-eval-with-expression`: Identifies dynamic code execution
-- `detect-new-buffer`: Prevents buffer vulnerabilities
-- `detect-no-csrf-before-method-override`: Identifies CSRF vulnerabilities
-- `detect-non-literal-fs-filename`: Prevents path traversal
-- `detect-non-literal-regexp`: Prevents ReDoS attacks
-- `detect-object-injection`: Identifies prototype pollution
-- `detect-possible-timing-attacks`: Prevents timing attacks
-- `detect-unsafe-regex`: Identifies vulnerable regex patterns
+## Environment Variables
 
-## Dependencies
+The application requires the following environment variables:
 
-- React 18
-- Material-UI v5
-- React Syntax Highlighter
-- ESLint with security plugins
-- ESLint-plugin-security
+- `REACT_APP_GPT_API_ENDPOINT`: Your GPT API endpoint (e.g., OpenAI API endpoint)
+- `REACT_APP_GPT_API_KEY`: Your GPT API key for authentication
 
-## Future Enhancements
+You can obtain these by:
+1. Setting up an account with OpenAI or your preferred AI provider
+2. Creating an API key in your account dashboard
+3. Adding these to your `.env` file
 
-- Support for more programming languages
-- Batch analysis of multiple files
-- Integration with popular code repositories
-- Custom vulnerability rules
-- Export reports in various formats (PDF, HTML, JSON)
-- Team collaboration features
-- Historical analysis tracking
-- Integration with CI/CD pipelines
-- Custom rule configuration
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details
