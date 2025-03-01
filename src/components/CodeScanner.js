@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
 import { 
-  Container, 
   Box, 
-  Typography,
+  Typography, 
+  TextField, 
+  Button, 
   Paper,
-  Tabs,
-  Tab,
-  AppBar,
-  TextField,
-  Button,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
   Alert,
   CircularProgress,
-  Snackbar,
   Select,
   MenuItem,
   FormControl,
@@ -23,38 +18,15 @@ import {
   Stack
 } from '@mui/material';
 import { 
-  Security as SecurityIcon,
   Error as ErrorIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
   CheckCircle as CheckCircleIcon,
-  Upload as UploadIcon,
-  Api as ApiIcon,
-  Psychology as PsychologyIcon
+  Upload as UploadIcon
 } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-import { analyzeCode } from './services/securityAnalyzer';
-
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`scanner-tabpanel-${index}`}
-      aria-labelledby={`scanner-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ py: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
-}
+import { analyzeCode } from '../services/securityAnalyzer';
 
 function CodeScanner() {
   const [code, setCode] = useState('');
@@ -82,7 +54,6 @@ function CodeScanner() {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Update filename and try to detect language
     setFileName(file.name);
     const extension = file.name.split('.').pop().toLowerCase();
     const languageMap = {
@@ -96,7 +67,6 @@ function CodeScanner() {
       setLanguage(languageMap[extension]);
     }
 
-    // Read file content
     const reader = new FileReader();
     reader.onload = (e) => {
       setCode(e.target.result);
@@ -134,66 +104,67 @@ function CodeScanner() {
   };
 
   return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Stack spacing={2}>
-        <FormControl fullWidth>
-          <InputLabel>Language</InputLabel>
-          <Select
-            value={language}
-            label="Language"
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <MenuItem value="javascript">JavaScript</MenuItem>
-            <MenuItem value="python">Python</MenuItem>
-            <MenuItem value="java">Java</MenuItem>
-            <MenuItem value="csharp">C#</MenuItem>
-            <MenuItem value="php">PHP</MenuItem>
-          </Select>
-        </FormControl>
+    <Box>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Stack spacing={2}>
+          <FormControl fullWidth>
+            <InputLabel>Language</InputLabel>
+            <Select
+              value={language}
+              label="Language"
+              onChange={(e) => setLanguage(e.target.value)}
+            >
+              <MenuItem value="javascript">JavaScript</MenuItem>
+              <MenuItem value="python">Python</MenuItem>
+              <MenuItem value="java">Java</MenuItem>
+              <MenuItem value="csharp">C#</MenuItem>
+              <MenuItem value="php">PHP</MenuItem>
+            </Select>
+          </FormControl>
 
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={<UploadIcon />}
+              sx={{ minWidth: '200px' }}
+            >
+              Upload File
+              <input
+                type="file"
+                hidden
+                accept=".js,.py,.java,.cs,.php"
+                onChange={handleFileUpload}
+              />
+            </Button>
+            {fileName && (
+              <Typography variant="body2" color="text.secondary">
+                Selected file: {fileName}
+              </Typography>
+            )}
+          </Box>
+
+          <TextField
+            fullWidth
+            multiline
+            rows={10}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder="Paste your code here or upload a file..."
+            variant="outlined"
+          />
+
           <Button
+            fullWidth
             variant="contained"
-            component="label"
-            startIcon={<UploadIcon />}
-            sx={{ minWidth: '200px' }}
+            color="primary"
+            onClick={analyzeSecurity}
+            disabled={loading || !code.trim()}
           >
-            Upload File
-            <input
-              type="file"
-              hidden
-              accept=".js,.py,.java,.cs,.php"
-              onChange={handleFileUpload}
-            />
+            {loading ? <CircularProgress size={24} /> : 'Analyze Code'}
           </Button>
-          {fileName && (
-            <Typography variant="body2" color="text.secondary">
-              Selected file: {fileName}
-            </Typography>
-          )}
-        </Box>
-
-        <TextField
-          fullWidth
-          multiline
-          rows={10}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          placeholder="Paste your code here or upload a file..."
-          variant="outlined"
-        />
-
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          onClick={analyzeSecurity}
-          disabled={loading || !code.trim()}
-          sx={{ mt: 2 }}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Analyze Code'}
-        </Button>
-      </Stack>
+        </Stack>
+      </Paper>
 
       {results && (
         <Box sx={{ mt: 4 }}>
@@ -273,100 +244,8 @@ function CodeScanner() {
           </List>
         </Box>
       )}
-    </Paper>
+    </Box>
   );
 }
 
-function OpenAPIScanner() {
-  return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        OpenAPI Scanner
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        This is a placeholder for the OpenAPI Scanner component.
-      </Typography>
-    </Paper>
-  );
-}
-
-function GPTScanner() {
-  return (
-    <Paper sx={{ p: 3, mb: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        GPT Scanner
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        This is a placeholder for the GPT Scanner component.
-      </Typography>
-    </Paper>
-  );
-}
-
-function App() {
-  const [currentTab, setCurrentTab] = useState(0);
-
-  const handleTabChange = (event, newValue) => {
-    setCurrentTab(newValue);
-  };
-
-  return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{ 
-          display: 'flex', 
-          alignItems: 'center',
-          mb: 4 
-        }}>
-          <SecurityIcon sx={{ mr: 2 }} />
-          Code Security Scanner
-        </Typography>
-
-        <AppBar position="static" color="default" sx={{ borderRadius: 1 }}>
-          <Tabs
-            value={currentTab}
-            onChange={handleTabChange}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="fullWidth"
-          >
-            <Tab 
-              icon={<SecurityIcon />} 
-              label="Code Scanner" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<ApiIcon />} 
-              label="OpenAPI Scanner" 
-              iconPosition="start"
-            />
-            <Tab 
-              icon={<PsychologyIcon />} 
-              label="GPT Scanner" 
-              iconPosition="start"
-            />
-          </Tabs>
-        </AppBar>
-
-        <TabPanel value={currentTab} index={0}>
-          <CodeScanner />
-        </TabPanel>
-        <TabPanel value={currentTab} index={1}>
-          <OpenAPIScanner />
-        </TabPanel>
-        <TabPanel value={currentTab} index={2}>
-          <GPTScanner />
-        </TabPanel>
-      </Box>
-
-      <Snackbar
-        open={false}
-        autoHideDuration={6000}
-        onClose={() => {}}
-        message=""
-      />
-    </Container>
-  );
-}
-
-export default App;
+export default CodeScanner;
