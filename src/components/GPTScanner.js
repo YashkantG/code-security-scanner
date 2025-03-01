@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
   Box, 
-  Typography, 
-  TextField, 
-  Button, 
+  Typography,
+  TextField,
+  Button,
   Paper,
   List,
   ListItem,
@@ -11,56 +11,42 @@ import {
   ListItemIcon,
   Alert,
   CircularProgress,
-  Stack,
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Stack,
+  Chip,
+  Divider
 } from '@mui/material';
 import { 
   Error as ErrorIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
   Upload as UploadIcon,
-  Psychology as PsychologyIcon
+  Psychology as PsychologyIcon,
+  CheckCircle as CheckCircleIcon,
+  AutoFixHigh as AutoFixIcon
 } from '@mui/icons-material';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { vs2015 } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import { analyzeWithGPT } from '../services/gptAnalyzer';
 
 function GPTScanner() {
   const [code, setCode] = useState('');
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [language, setLanguage] = useState('javascript');
   const [fileName, setFileName] = useState('');
-  const [scanType, setScanType] = useState('security');
 
-  const analyzeWithGPT = async () => {
+  const analyzeCode = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // TODO: Implement GPT-based analysis
-      const mockResults = {
-        overallRisk: 'medium',
-        findings: [
-          {
-            severity: 'high',
-            category: 'Security',
-            description: 'Potential SQL injection vulnerability in database query',
-            recommendation: 'Use parameterized queries or an ORM to prevent SQL injection',
-            explanation: 'The code concatenates user input directly into SQL queries, which could allow attackers to inject malicious SQL commands.'
-          },
-          {
-            severity: 'medium',
-            category: 'Best Practices',
-            description: 'Inconsistent error handling patterns',
-            recommendation: 'Implement consistent error handling using try-catch blocks and proper error logging',
-            explanation: 'Different error handling approaches are used throughout the code, making it harder to maintain and debug.'
-          }
-        ]
-      };
-      setResults(mockResults);
+      const analysis = await analyzeWithGPT(code, language);
+      setResults(analysis);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -73,6 +59,22 @@ function GPTScanner() {
     if (!file) return;
 
     setFileName(file.name);
+    const extension = file.name.split('.').pop().toLowerCase();
+    const languageMap = {
+      'js': 'javascript',
+      'py': 'python',
+      'java': 'java',
+      'cs': 'csharp',
+      'php': 'php',
+      'rb': 'ruby',
+      'go': 'go',
+      'rs': 'rust',
+      'ts': 'typescript'
+    };
+    if (languageMap[extension]) {
+      setLanguage(languageMap[extension]);
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       setCode(e.target.result);
@@ -113,17 +115,29 @@ function GPTScanner() {
     <Box>
       <Paper sx={{ p: 3, mb: 3 }}>
         <Stack spacing={2}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <PsychologyIcon color="primary" sx={{ fontSize: 30 }} />
+            <Typography variant="h6">
+              AI-Powered Code Analysis
+            </Typography>
+          </Box>
+
           <FormControl fullWidth>
-            <InputLabel>Analysis Type</InputLabel>
+            <InputLabel>Programming Language</InputLabel>
             <Select
-              value={scanType}
-              label="Analysis Type"
-              onChange={(e) => setScanType(e.target.value)}
+              value={language}
+              label="Programming Language"
+              onChange={(e) => setLanguage(e.target.value)}
             >
-              <MenuItem value="security">Security Analysis</MenuItem>
-              <MenuItem value="best-practices">Best Practices Review</MenuItem>
-              <MenuItem value="performance">Performance Analysis</MenuItem>
-              <MenuItem value="comprehensive">Comprehensive Review</MenuItem>
+              <MenuItem value="javascript">JavaScript</MenuItem>
+              <MenuItem value="python">Python</MenuItem>
+              <MenuItem value="java">Java</MenuItem>
+              <MenuItem value="csharp">C#</MenuItem>
+              <MenuItem value="php">PHP</MenuItem>
+              <MenuItem value="ruby">Ruby</MenuItem>
+              <MenuItem value="go">Go</MenuItem>
+              <MenuItem value="rust">Rust</MenuItem>
+              <MenuItem value="typescript">TypeScript</MenuItem>
             </Select>
           </FormControl>
 
@@ -134,11 +148,11 @@ function GPTScanner() {
               startIcon={<UploadIcon />}
               sx={{ minWidth: '200px' }}
             >
-              Upload Code
+              Upload Code File
               <input
                 type="file"
                 hidden
-                accept=".js,.py,.java,.cs,.php,.ts,.go,.rb"
+                accept=".js,.py,.java,.cs,.php,.rb,.go,.rs,.ts"
                 onChange={handleFileUpload}
               />
             </Button>
@@ -155,7 +169,7 @@ function GPTScanner() {
             rows={10}
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            placeholder="Paste your code here or upload a file for AI-powered analysis..."
+            placeholder="Paste your code here for AI-powered security analysis..."
             variant="outlined"
           />
 
@@ -163,55 +177,115 @@ function GPTScanner() {
             fullWidth
             variant="contained"
             color="primary"
-            onClick={analyzeWithGPT}
+            onClick={analyzeCode}
             disabled={loading || !code.trim()}
-            startIcon={<PsychologyIcon />}
+            startIcon={loading ? <CircularProgress size={20} /> : <AutoFixIcon />}
           >
-            {loading ? <CircularProgress size={24} /> : 'Analyze with AI'}
+            {loading ? 'Analyzing Code...' : 'Analyze with AI'}
           </Button>
+
+          {error && (
+            <Alert severity="error">
+              {error}
+            </Alert>
+          )}
         </Stack>
       </Paper>
 
       {results && (
-        <Box sx={{ mt: 4 }}>
+        <Paper sx={{ p: 3 }}>
           <Alert 
             severity={results.overallRisk.toLowerCase()} 
             sx={{ mb: 3 }}
+            icon={getSeverityIcon(results.overallRisk)}
           >
-            Overall Analysis Results: {results.overallRisk} Risk Level
+            <Typography variant="subtitle1">
+              Overall Risk Level: {results.overallRisk.toUpperCase()}
+            </Typography>
           </Alert>
 
           <Typography variant="h6" gutterBottom>
-            AI Analysis Findings
+            AI Security Analysis Results
           </Typography>
           
           <List>
-            {results.findings.map((finding, index) => (
+            {results.issues.map((issue, index) => (
               <ListItem key={index} sx={{ 
-                bgcolor: `${getSeverityColor(finding.severity)}15`,
+                bgcolor: `${getSeverityColor(issue.severity)}15`,
                 borderRadius: 1,
-                mb: 1 
+                mb: 1,
+                flexDirection: 'column',
+                alignItems: 'flex-start'
               }}>
-                <ListItemIcon>
-                  {getSeverityIcon(finding.severity)}
-                </ListItemIcon>
-                <ListItemText
-                  primary={`${finding.category}: ${finding.description}`}
-                  secondary={
-                    <>
-                      <Typography component="div" variant="body2" color="text.primary" sx={{ mt: 1 }}>
-                        {finding.explanation}
-                      </Typography>
-                      <Typography component="div" variant="body2" color="success.main" sx={{ mt: 1 }}>
-                        Recommendation: {finding.recommendation}
-                      </Typography>
-                    </>
-                  }
-                />
+                <Box sx={{ display: 'flex', width: '100%', mb: 1 }}>
+                  <ListItemIcon>
+                    {getSeverityIcon(issue.severity)}
+                  </ListItemIcon>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+                    <Typography variant="subtitle1" color="text.primary">
+                      {issue.type}
+                    </Typography>
+                    {issue.line && (
+                      <Chip 
+                        label={`Line ${issue.line}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                    <Chip 
+                      label={issue.severity.toUpperCase()}
+                      size="small"
+                      color={issue.severity === 'high' ? 'error' : issue.severity === 'medium' ? 'warning' : 'info'}
+                    />
+                  </Box>
+                </Box>
+                
+                <Box sx={{ pl: 7, width: '100%' }}>
+                  <Typography variant="body2" color="text.primary" paragraph>
+                    {issue.description}
+                  </Typography>
+                  <Typography variant="body2" color="success.main">
+                    <strong>Recommendation:</strong> {issue.recommendation}
+                  </Typography>
+                </Box>
               </ListItem>
             ))}
           </List>
-        </Box>
+
+          {results.secureCodeExample && (
+            <>
+              <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                Secure Implementation Example
+              </Typography>
+              <SyntaxHighlighter 
+                language={language}
+                style={vs2015}
+                customStyle={{
+                  padding: '16px',
+                  borderRadius: '4px'
+                }}
+              >
+                {results.secureCodeExample}
+              </SyntaxHighlighter>
+            </>
+          )}
+
+          <Divider sx={{ my: 3 }} />
+
+          <Typography variant="h6" gutterBottom>
+            Best Practices & Recommendations
+          </Typography>
+          <List>
+            {results.suggestions.map((suggestion, index) => (
+              <ListItem key={index}>
+                <ListItemIcon>
+                  <CheckCircleIcon color="success" />
+                </ListItemIcon>
+                <ListItemText primary={suggestion} />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
     </Box>
   );
