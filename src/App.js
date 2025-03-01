@@ -9,9 +9,7 @@ import {
   AppBar,
   ThemeProvider,
   createTheme,
-  CssBaseline,
-  useTheme,
-  alpha
+  CssBaseline
 } from '@mui/material';
 import { 
   Security as SecurityIcon,
@@ -27,13 +25,13 @@ import GPTScanner from './components/GPTScanner';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2962ff', // Bright blue
+      main: '#2962ff',
       light: '#768fff',
       dark: '#0039cb',
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#7c4dff', // Purple
+      main: '#7c4dff',
       light: '#b47cff',
       dark: '#3f1dcb',
       contrastText: '#ffffff',
@@ -41,30 +39,12 @@ const theme = createTheme({
     background: {
       default: '#f5f5f7',
       paper: '#ffffff',
-    },
-    error: {
-      main: '#ff3d00',
-    },
-    warning: {
-      main: '#ffa000',
-    },
-    success: {
-      main: '#00c853',
-    },
-    info: {
-      main: '#00b0ff',
     }
   },
   typography: {
     fontFamily: '"Segoe UI", "Roboto", "Arial", sans-serif',
-    h1: {
-      fontWeight: 600,
-    },
     h4: {
       fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 500,
     }
   },
   components: {
@@ -85,27 +65,17 @@ const theme = createTheme({
           minHeight: 64,
         },
       },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)',
-        },
-      },
-    },
+    }
   },
 });
 
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
+function TabPanel({ children, value, index }) {
   return (
     <div
       role="tabpanel"
       hidden={value !== index}
       id={`scanner-tabpanel-${index}`}
       aria-labelledby={`scanner-tab-${index}`}
-      {...other}
     >
       {value === index && (
         <Box sx={{ py: 3 }}>
@@ -114,6 +84,13 @@ function TabPanel(props) {
       )}
     </div>
   );
+}
+
+function a11yProps(index) {
+  return {
+    id: `scanner-tab-${index}`,
+    'aria-controls': `scanner-tabpanel-${index}`,
+  };
 }
 
 function App() {
@@ -165,6 +142,7 @@ function App() {
               indicatorColor="secondary"
               textColor="inherit"
               variant="fullWidth"
+              aria-label="scanner tabs"
               sx={{
                 '& .MuiTab-root': {
                   color: 'rgba(255,255,255,0.7)',
@@ -181,6 +159,7 @@ function App() {
               <Tab 
                 icon={<SecurityIcon />} 
                 label="Code Scanner" 
+                {...a11yProps(0)}
                 sx={{ 
                   display: 'flex',
                   flexDirection: 'row',
@@ -195,6 +174,7 @@ function App() {
               <Tab 
                 icon={<ApiIcon />} 
                 label="OpenAPI Scanner"
+                {...a11yProps(1)}
                 sx={{ 
                   display: 'flex',
                   flexDirection: 'row',
@@ -209,6 +189,7 @@ function App() {
               <Tab 
                 icon={<PsychologyIcon />} 
                 label="GPT Scanner"
+                {...a11yProps(2)}
                 sx={{ 
                   display: 'flex',
                   flexDirection: 'row',
@@ -224,36 +205,16 @@ function App() {
           </Container>
         </AppBar>
 
-        <Container 
-          maxWidth="lg" 
-          sx={{ 
-            mt: 4,
-            mb: 4,
-            position: 'relative',
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: -100,
-              left: 20,
-              right: 20,
-              bottom: -20,
-              background: 'linear-gradient(180deg, rgba(41,98,255,0.05) 0%, rgba(124,77,255,0.05) 100%)',
-              borderRadius: 4,
-              zIndex: 0,
-            }
-          }}
-        >
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            <TabPanel value={currentTab} index={0}>
-              <CodeScanner />
-            </TabPanel>
-            <TabPanel value={currentTab} index={1}>
-              <OpenAPIScanner />
-            </TabPanel>
-            <TabPanel value={currentTab} index={2}>
-              <GPTScanner />
-            </TabPanel>
-          </Box>
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+          <TabPanel value={currentTab} index={0}>
+            <CodeScanner />
+          </TabPanel>
+          <TabPanel value={currentTab} index={1}>
+            <OpenAPIScanner />
+          </TabPanel>
+          <TabPanel value={currentTab} index={2}>
+            <GPTScanner />
+          </TabPanel>
         </Container>
       </Box>
     </ThemeProvider>

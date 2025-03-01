@@ -32,63 +32,74 @@ export const analyzeWithGPT = async (code, language) => {
       - General best practices
     `;
 
-    const response = await axios.post(API_ENDPOINT, {
-      model: "gpt-4", // or your preferred model
-      messages: [
-        {
-          role: "system",
-          content: "You are a security-focused code analysis assistant. Analyze code for security issues and provide detailed, actionable feedback."
+    try {
+      const response = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${API_KEY}`,
+          'Content-Type': 'application/json'
         },
-        {
-          role: "user",
-          content: prompt
-        }
-      ]
-    }, {
-      headers: {
-        'Authorization': `Bearer ${API_KEY}`,
-        'Content-Type': 'application/json'
-      }
-    });
+        body: JSON.stringify({
+          model: "gpt-4", // or your preferred model
+          messages: [
+            {
+              role: "system",
+              content: "You are a security-focused code analysis assistant. Analyze code for security issues and provide detailed, actionable feedback."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
+        })
+      });
 
-    // Process and structure the GPT response
-    const analysis = response.data.choices[0].message.content;
-    
-    // For demonstration, return mock structured data
-    // In production, you would parse the GPT response into this structure
-    return {
-      valid: true,
-      overallRisk: 'medium',
-      issues: [
-        {
-          severity: 'high',
-          type: 'Input Validation',
-          description: 'User input is not properly sanitized before processing',
-          line: 15,
-          recommendation: 'Use input validation libraries or implement strict validation'
-        },
-        {
-          severity: 'medium',
-          type: 'Authentication',
-          description: 'Weak password requirements in authentication logic',
-          line: 23,
-          recommendation: 'Implement strong password policies and use secure hashing'
-        }
-      ],
-      suggestions: [
-        'Implement proper input validation',
-        'Use secure authentication methods',
-        'Follow secure coding guidelines',
-        'Regular security audits'
-      ],
-      secureCodeExample: '// Example of secure implementation\n' +
-        'function validateInput(userInput) {\n' +
-        '  // Sanitize and validate input\n' +
-        '  return sanitizedInput;\n' +
-        '}'
-    };
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const analysis = data.choices[0].message.content;
+      
+      // For demonstration, return mock structured data
+      // In production, you would parse the GPT response into this structure
+      return {
+        valid: true,
+        overallRisk: 'medium',
+        issues: [
+          {
+            severity: 'high',
+            type: 'Input Validation',
+            description: 'User input is not properly sanitized before processing',
+            line: 15,
+            recommendation: 'Use input validation libraries or implement strict validation'
+          },
+          {
+            severity: 'medium',
+            type: 'Authentication',
+            description: 'Weak password requirements in authentication logic',
+            line: 23,
+            recommendation: 'Implement strong password policies and use secure hashing'
+          }
+        ],
+        suggestions: [
+          'Implement proper input validation',
+          'Use secure authentication methods',
+          'Follow secure coding guidelines',
+          'Regular security audits'
+        ],
+        secureCodeExample: '// Example of secure implementation\n' +
+          'function validateInput(userInput) {\n' +
+          '  // Sanitize and validate input\n' +
+          '  return sanitizedInput;\n' +
+          '}'
+      };
+    } catch (error) {
+      console.error('API Request Error:', error);
+      throw new Error('Failed to communicate with GPT API');
+    }
   } catch (error) {
     console.error('GPT Analysis Error:', error);
-    throw new Error(error.response?.data?.message || error.message || 'Error analyzing code with GPT');
+    throw new Error(error.message || 'Error analyzing code with GPT');
   }
 };
